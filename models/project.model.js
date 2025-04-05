@@ -20,11 +20,14 @@ const projectSchema = new mongoose.Schema({
         type: Object,
         default: {}
     },
+    createdAt:{
+        type: Date,
+        default: Date.now
+    },
 
 })
 
 
 const Project = mongoose.model('project', projectSchema)
-
 
 export default Project;

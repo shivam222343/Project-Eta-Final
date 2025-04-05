@@ -1,7 +1,6 @@
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY);
+const genAI = new GoogleGenerativeAI("AIzaSyDMNNdXChkIa4aeXPMhFuJUtS6wa1MIX8w");
 const model = genAI.getGenerativeModel({
     model: "gemini-1.5-flash",
     generationConfig: {
@@ -102,8 +101,18 @@ const model = genAI.getGenerativeModel({
 });
 
 export const generateResult = async (prompt) => {
-
-    const result = await model.generateContent(prompt);
-
-    return result.response.text()
-}
+    try {
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+        
+        // Try to parse as JSON if possible
+        try {
+            return JSON.parse(responseText);
+        } catch {
+            return { text: responseText };
+        }
+    } catch (error) {
+        console.error('AI generation error:', error);
+        return { text: "Sorry, I encountered an error processing your request." };
+    }
+};

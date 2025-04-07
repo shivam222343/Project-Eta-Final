@@ -136,3 +136,58 @@ export const updateFileTree = async ({ projectId, fileTree }) => {
 
     return project;
 }
+
+// Add these to your existing project.service.js
+
+export const updateProject = async ({ projectId, updateData, userId }) => {
+    const project = await projectModel.findOneAndUpdate(
+        { _id: projectId, $or: [{ userId }, { users: userId }] },
+        updateData,
+        { new: true }
+    );
+    
+    if (!project) {
+        throw new Error('Project not found or unauthorized');
+    }
+    
+    return project;
+};
+
+export const deleteProject = async ({ projectId, userId }) => {
+    const result = await projectModel.findOneAndDelete({
+        _id: projectId,
+        $or: [{ userId }, { users: userId }]
+    });
+    
+    if (!result) {
+        throw new Error('Project not found or unauthorized');
+    }
+    
+    return result;
+};
+
+export const removeUserFromProject = async ({ projectId, userIdToRemove, requestingUserId }) => {
+    const project = await projectModel.findOne({
+        _id: projectId,
+        $or: [{ userId: requestingUserId }, { users: requestingUserId }]
+    });
+    
+    if (!project) {
+        throw new Error('Project not found or unauthorized');
+    }
+    
+    // Only the owner can remove users
+    if (project.userId.toString() !== requestingUserId.toString()) {
+        throw new Error('Only the project owner can remove users');
+    }
+    
+    // Can't remove yourself if you're the owner
+    if (userIdToRemove === requestingUserId.toString()) {
+        throw new Error('Project owner cannot remove themselves');
+    }
+    
+    project.users = project.users.filter(user => user.toString() !== userIdToRemove);
+    await project.save();
+    
+    return project;
+};

@@ -9,24 +9,46 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import messageRouter from './routes/message.routes.js';
 
-
-
 dotenv.config();
-
 
 // Connect to database
 connect();
 
 const app = express();
 
-// Middleware
-//using cors
-app.use(cors({
-    origin: ['http://localhost:5173', 'https://eta-frontend.netlify.app'],
+// Enhanced CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://eta-frontend.netlify.app',
+  'https://project-eta.netlify.app/' 
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept'
+    ],
+    exposedHeaders: ['Set-Cookie', 'Authorization']
+  })
+);
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Logging middleware
 app.use(morgan('dev'));

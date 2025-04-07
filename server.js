@@ -10,10 +10,24 @@ import { generateResult } from './services/ai.service.js';
 const port = process.env.PORT || 3000;
 
 const server = http.createServer(app);
+
+// Enhanced Socket.IO CORS configuration
+const allowedSocketOrigins = [
+  'http://localhost:5173',
+  'https://eta-frontend.netlify.app',
+  'https://project-eta.netlify.app',
+  'https://rad-alfajores-2cf9fa.netlify.app'
+];
+
 const io = new Server(server, {
-    cors: {
-        origin: '*'
-    }
+  cors: {
+    origin: allowedSocketOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    transports: ['websocket', 'polling']
+  },
+  allowEIO3: true
 });
 
 io.use(async (socket, next) => {

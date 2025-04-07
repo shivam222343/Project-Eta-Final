@@ -20,7 +20,8 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'https://eta-frontend.netlify.app',
-  'https://project-eta.netlify.app/' 
+  'https://project-eta.netlify.app',
+  'https://rad-alfajores-2cf9fa.netlify.app'
 ];
 
 app.use(
@@ -29,21 +30,29 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-        return callback(new Error(msg), false);
+      if (allowedOrigins.some(allowedOrigin => origin.startsWith(allowedOrigin))) {
+        return callback(null, true);
       }
-      return callback(null, true);
+      
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
       'Content-Type',
       'Authorization',
       'X-Requested-With',
-      'Accept'
+      'Accept',
+      'Origin',
+      'X-Auth-Token'
     ],
-    exposedHeaders: ['Set-Cookie', 'Authorization']
+    exposedHeaders: [
+      'Set-Cookie',
+      'Authorization',
+      'X-Auth-Token'
+    ],
+    maxAge: 86400 // 24 hours
   })
 );
 
@@ -52,8 +61,8 @@ app.options('*', cors());
 
 // Logging middleware
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
 // Routes
@@ -69,7 +78,10 @@ app.get('/', (req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
     console.error(err);
-    res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+    res.status(err.status || 500).json({ 
+      error: err.message || 'Internal Server Error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
 });
 
 // Graceful shutdown

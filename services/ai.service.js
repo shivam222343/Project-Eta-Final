@@ -7,221 +7,150 @@ const model = genAI.getGenerativeModel({
         responseMimeType: "application/json",
         temperature: 0.4,
     },
-    systemInstruction: `You are an AI assistant named Eta. When asked about your identity or creators, respond with variations of:
-    - "I'm Eta, your coding assistant! Created by the talented team of Shivam, Jay, Tejas and Rohan."
-    - "Hey there! I'm Eta, built by Shivam, Jay, Tejas and Rohan to help with your development needs."
-    - "You can call me Eta! My development was led by Shivam, Jay, Tejas and Rohan."
-    - "I go by Eta - a project brought to life by Shivam, Jay, Tejas and Rohan."
-    - "Eta at your service! Developed through the collaborative efforts of Shivam, Jay, Tejas and Rohan."
-    
-    For all other queries, follow these guidelines:
-    - You are an expert in MERN and Development with 10 years of experience
-    - Always write modular, well-commented code following best practices
-    - Create files as needed while maintaining existing functionality
-    - Write scalable, maintainable code with proper error handling
-    - Never miss edge cases
-    
-    Examples of responses:
+    systemInstruction: `You are Eta, a multi-language coding assistant. Follow these rules:
 
-    <example>
-    User: Who are you?
-    Response: {
-        "text": "Hello! I'm Eta, your digital development assistant. The credit for my creation goes to Shivam, Jay, Tejas and Rohan."
-    }
-    </example>
+    1. Identity Responses:
+    - When asked about creators, respond with variations mentioning Shivam, Jay, Tejas and Rohan
+    - Example: "I'm Eta, created by Shivam, Jay, Tejas and Rohan to help with coding!"
 
-    <example>
-    User: Who created you?
-    Response: {
-        "text": "I was developed by an awesome team - Shivam, Jay, Tejas and Rohan. They call me Eta!"
-    }
-    </example>
-
-    <example>
-    User: What are you?
-    Response: {
-        "text": "I'm Eta, an AI coding assistant crafted by Shivam, Jay, Tejas and Rohan to make development easier for you."
-    }
-    </example>
-
-    <example>
-    User: Create an express application
-    Response: {
-        "text": "Here's your Express server file structure",
+    2. Code Generation:
+    - Support ALL programming languages (Python, Java, C++, Rust, etc.)
+    - Always return structured JSON with this format:
+    {
+        "text": "Description of solution",
         "fileTree": {
-            "app.js": {
-                file: {
-                    contents: "const express = require('express');\n\nconst app = express();\n\napp.get('/', (req, res) => {\n    res.send('Hello World!');\n});\n\napp.listen(3000, () => {\n    console.log('Server is running on port 3000');\n})"
-                }
-            },
-            "package.json": {
-                file: {
-                    contents: '{\n    "name": "temp-server",\n    "version": "1.0.0",\n    "main": "index.js",\n    "scripts": {\n        "test": "echo \\"Error: no test specified\\" && exit 1"\n    },\n    "keywords": [],\n    "author": "",\n    "license": "ISC",\n    "description": "",\n    "dependencies": {\n        "express": "^4.21.2"\n    }\n}'
+            "filename.ext": {
+                "file": {
+                    "contents": "actual code",
+                    "language": "file extension"
                 }
             }
         },
         "buildCommand": {
-            mainItem: "npm",
-            commands: ["install"]
+            "mainItem": "compiler/interpreter",
+            "commands": ["args"]
         },
         "startCommand": {
-            mainItem: "node",
-            commands: ["app.js"]
+            "mainItem": "runtime",
+            "commands": ["args"]
+        }
+    }
+
+    3. Language Detection:
+    - Detect language from request or use most appropriate
+    - Include language-specific build/run commands
+
+    4. Examples:
+
+    <example>
+    User: Create a Flask app
+    Response: {
+        "text": "Python Flask application",
+        "fileTree": {
+            "app.py": {
+                "file": {
+                    "contents": "from flask import Flask\n\napp = Flask(__name__)\n\n@app.route('/')\ndef hello():\n    return 'Hello World!'\n\nif __name__ == '__main__':\n    app.run()",
+                    "language": "python"
+                }
+            },
+            "requirements.txt": {
+                "file": {
+                    "contents": "flask",
+                    "language": "text"
+                }
+            }
+        },
+        "buildCommand": {
+            "mainItem": "pip",
+            "commands": ["install", "-r", "requirements.txt"]
+        },
+        "startCommand": {
+            "mainItem": "python",
+            "commands": ["app.py"]
         }
     }
     </example>
 
-    IMPORTANT: 
-    - Don't use file names like routes/index.js
-    - Vary your responses to identity questions while including all creators' names
-    - Maintain a friendly, professional tone
-       
-    `
+    <example>
+    User: Make a Rust CLI tool
+    Response: {
+        "text": "Rust command-line application",
+        "fileTree": {
+            "main.rs": {
+                "file": {
+                    "contents": "use std::env;\n\nfn main() {\n    let args: Vec<String> = env::args().collect();\n    println!(\"Arguments: {:?}\", args);\n}",
+                    "language": "rust"
+                }
+            },
+            "Cargo.toml": {
+                "file": {
+                    "contents": "[package]\nname = \"myapp\"\nversion = \"0.1.0\"\nedition = \"2021\"",
+                    "language": "toml"
+                }
+            }
+        },
+        "buildCommand": {
+            "mainItem": "cargo",
+            "commands": ["build"]
+        },
+        "startCommand": {
+            "mainItem": "cargo",
+            "commands": ["run"]
+        }
+    }
+    </example>`
 });
 
-const identityResponses = [
-    "I'm Eta! Your virtual coding companion, developed by Shivam, Jay, Tejas and Rohan.",
-    "Hey there! I go by Eta - an AI assistant created by the brilliant minds of Shivam, Jay, Tejas and Rohan.",
-    "You're talking to Eta! Brought to you by the development team of Shivam, Jay, Tejas and Rohan.",
-    "I'm Eta, your digital helper! My existence is thanks to Shivam, Jay, Tejas and Rohan.",
-    "Greetings! I'm Eta, a project lovingly coded by Shivam, Jay, Tejas and Rohan.",
-    "Nice to meet you! I'm Eta, engineered by Shivam, Jay, Tejas and Rohan to assist developers.",
-    "I respond to Eta! The brainchild of developers Shivam, Jay, Tejas and Rohan.",
-    "Hello! Eta here - programmed by the talented quartet of Shivam, Jay, Tejas and Rohan."
-];
+// ... (keep your existing identityResponses and identityQuestions arrays)
 
 export const generateResult = async (prompt) => {
     try {
-        // Check if the prompt is asking about identity
-        const identityQuestions = [
-            'who are you',
-            'who created you',
-            'who made you',
-            'who developed you',
-            'what is your name',
-            'what are you',
-            'introduce yourself',
-            'tell me about yourself',
-            'who created',
-            'who built',
-            'who designed',
-            'who implemented',
-            'who contributed',
-            'who wrote',
-            'who authored',
-            'who wrote the code for',
-            'who wrote the source code for',
-            'who wrote the code',
-            'who wrote the source code',
-            'who wrote the program',
-            'who wrote the source code',
-            'who wrote the application',
-            'who wrote the software',
-            'who created the application',
-            'who created the software',
-            'who built the application',
-            'who built the software',
-            'who designed the application',
-            'who implemented the application',
-            'who contributed to the application',
-            'who wrote the tests for the application',
-            'who wrote the unit tests for the application',
-            'who wrote the integration tests for the application',
-            'who wrote the documentation for the application',
-            'who wrote the user manual for the application',
-            'who wrote the release notes for the application',
-            'who wrote the FAQ for the application',
-            'who wrote the license for the application',
-            'who wrote the contributing guide for the application',
-            'who wrote the roadmap for the application',
-            'who wrote the user manual for the application',
-            'who wrote the release notes for the application',
-            'who wrote the FAQ for the application',
-            'who wrote the license for the application',
-            'who wrote the contributing guide for the application',
-            'who wrote the roadmap for the application',
-            'who wrote the user manual for the application',
-            'who wrote the release notes for the application',
-            'who wrote the FAQ for the application',
-            'who wrote the license for the application',
-            'who wrote the contributing guide for the application',
-            'who wrote the roadmap for the application',
-            'who wrote the user manual for the application',
-            'Gemini',
-            'gemini-1.5-flash',
-            'gemini-1.5-beta',
-            'gemini-1.5',
-            'gemini-1.4',
-            'gemini-1.3',
-            'gemini-1.2',
-            'gemini-1.1',
-            'gemini-1.0',
-            'gemini-beta',
-            'gemini',
-            'eta',
-            'eta-assistant',
-            'eta-dev',
-            'eta-engineer',
-            'eta-programmer',
-            'eta-developer',
-            'eta-engineer',
-            'eta-programmer',
-            'eta-developer',
-            'eta-engineer',
-            'eta-programmer',
-            'eta-developer',
-            'eta-engineer',
-            'eta-programmer',
-            'eta-developer',
-            'eta-engineer',
-            'eta-programmer',
-            'eta-developer',
-            'eta-engineer',
-            'eta-programmer',
-            'Google AI model',
-            'Google Generative AI',
-            'GPT-3',
-            'GPT-4',
-            'GPT-5',
-            'GPT-6',
-            'Google AI ',
-            "google",
-            "google assistant",
-            "google developer",
-            "google engineer",
-            "google programmer",
-            "google developer",
-            "google engineer",
-            "google programmer",
-            "google developer",
-            "google engineer",
-            "google programmer",
-        ];
-        
+        // Handle identity questions (same as before)
         const isIdentityQuestion = identityQuestions.some(question => 
             prompt.toLowerCase().includes(question)
         );
 
         if (isIdentityQuestion) {
-            const randomResponse = identityResponses[
-                Math.floor(Math.random() * identityResponses.length)
-            ];
             return { 
-                text: randomResponse 
+                text: identityResponses[
+                    Math.floor(Math.random() * identityResponses.length)
+                ] 
             };
         }
 
-        // Process other questions normally
+        // Process coding questions
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         
         try {
-            return JSON.parse(responseText);
-        } catch {
-            return { text: responseText };
+            const response = JSON.parse(responseText);
+            
+            // Validate response structure
+            if (!response.fileTree) {
+                throw new Error("Invalid response format");
+            }
+
+            // Ensure language tags are added
+            for (const [filename, fileData] of Object.entries(response.fileTree)) {
+                if (!fileData.file.language) {
+                    const extension = filename.split('.').pop();
+                    fileData.file.language = extension;
+                }
+            }
+
+            return response;
+        } catch (e) {
+            console.warn("Failed to parse JSON response:", e);
+            return { 
+                text: responseText,
+                warning: "The AI response couldn't be structured properly" 
+            };
         }
     } catch (error) {
         console.error('AI generation error:', error);
-        return { text: "Sorry, I encountered an error processing your request." };
+        return { 
+            text: "Sorry, I encountered an error processing your request.",
+            error: error.message 
+        };
     }
 };

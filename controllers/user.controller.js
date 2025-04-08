@@ -56,7 +56,75 @@ export const loginController = async (req, res) => {
 };
 
 export const profileController = async (req, res) => {
-    res.status(200).json({ user: req.user });
+    try {
+        const cacheKey = `user:profile:${req.user.id}`;
+        
+        // Try to get cached profile
+        const cachedProfile = await redisClient.get(cacheKey);
+        if (cachedProfile) {
+            return res.status(200).json({
+                success: true,
+                data: JSON.parse(cachedProfile),
+                meta: { source: 'cache' }
+            });
+        }
+
+        // Fetch from database with additional processing
+        const user = await UserModel.findById(req.user.id)
+            .select('-password -__v')
+            .populate({
+                path: 'projects',
+                select: 'name description createdAt',
+                options: { limit: 3, sort: { createdAt: -1 } }
+            })
+            .lean();
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found',
+                code: 'USER_NOT_FOUND'
+            });
+        }
+
+        // Process profile data
+        const profileData = {
+            ...user,
+            statistics: {
+                projectCount: user.projects?.length || 0,
+                accountAge: Math.floor((new Date() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)) + ' days'
+            },
+            meta: {
+                lastActive: user.lastActive || 'Never',
+                accountCreated: user.createdAt
+            }
+        };
+
+        // Cache the processed data for 1 hour
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(profileData));
+
+        res.status(200).json({
+            success: true,
+            data: profileData,
+            meta: { source: 'database' }
+        });
+
+    } catch (error) {
+        console.error('[ProfileController] Error:', error);
+        
+        const response = {
+            success: false,
+            error: 'Failed to fetch profile data',
+            code: 'PROFILE_FETCH_ERROR'
+        };
+
+        if (process.env.NODE_ENV === 'development') {
+            response.stack = error.stack;
+            response.details = error.message;
+        }
+
+        res.status(500).json(response);
+    }
 };
 
 export const logoutController = async (req, res) => {

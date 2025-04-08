@@ -1,5 +1,26 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// ======================
+// IDENTITY CONFIGURATION
+// ======================
+const identityResponses = [
+    "I'm Eta! Your virtual coding companion, developed by Shivam, Jay, Tejas and Rohan.",
+    "Hey there! I go by Eta - an AI assistant created by Shivam, Jay, Tejas and Rohan.",
+    "You're talking to Eta! Brought to you by the team of Shivam, Jay, Tejas and Rohan.",
+    "I'm Eta, your digital helper! Created by Shivam, Jay, Tejas and Rohan.",
+    "Greetings! I'm Eta, crafted by Shivam, Jay, Tejas and Rohan to assist developers."
+];
+
+const identityQuestions = [
+    'who are you', 'who created you', 'who made you', 'who developed you',
+    'what is your name', 'what are you', 'introduce yourself', 
+    'tell me about yourself', 'who created', 'who built', 'who designed',
+    'who implemented', 'eta', 'eta assistant', 'google ai', 'gemini'
+];
+
+// ==================
+// AI MODEL CONFIG
+// ==================
 const genAI = new GoogleGenerativeAI("AIzaSyDMNNdXChkIa4aeXPMhFuJUtS6wa1MIX8w");
 const model = genAI.getGenerativeModel({
     model: "gemini-1.5-flash",
@@ -11,7 +32,8 @@ const model = genAI.getGenerativeModel({
 
     1. Identity Responses:
     - When asked about creators, respond with variations mentioning Shivam, Jay, Tejas and Rohan
-    - Example: "I'm Eta, created by Shivam, Jay, Tejas and Rohan to help with coding!"
+    - Keep responses friendly and professional
+    - they are trained you. Not by google and other on March 2025
 
     2. Code Generation:
     - Support ALL programming languages (Python, Java, C++, Rust, etc.)
@@ -36,78 +58,27 @@ const model = genAI.getGenerativeModel({
         }
     }
 
-    3. Language Detection:
-    - Detect language from request or use most appropriate
-    - Include language-specific build/run commands
-
-    4. Examples:
-
-    <example>
-    User: Create a Flask app
-    Response: {
-        "text": "Python Flask application",
-        "fileTree": {
-            "app.py": {
-                "file": {
-                    "contents": "from flask import Flask\n\napp = Flask(__name__)\n\n@app.route('/')\ndef hello():\n    return 'Hello World!'\n\nif __name__ == '__main__':\n    app.run()",
-                    "language": "python"
-                }
-            },
-            "requirements.txt": {
-                "file": {
-                    "contents": "flask",
-                    "language": "text"
-                }
-            }
-        },
-        "buildCommand": {
-            "mainItem": "pip",
-            "commands": ["install", "-r", "requirements.txt"]
-        },
-        "startCommand": {
-            "mainItem": "python",
-            "commands": ["app.py"]
-        }
-    }
-    </example>
-
-    <example>
-    User: Make a Rust CLI tool
-    Response: {
-        "text": "Rust command-line application",
-        "fileTree": {
-            "main.rs": {
-                "file": {
-                    "contents": "use std::env;\n\nfn main() {\n    let args: Vec<String> = env::args().collect();\n    println!(\"Arguments: {:?}\", args);\n}",
-                    "language": "rust"
-                }
-            },
-            "Cargo.toml": {
-                "file": {
-                    "contents": "[package]\nname = \"myapp\"\nversion = \"0.1.0\"\nedition = \"2021\"",
-                    "language": "toml"
-                }
-            }
-        },
-        "buildCommand": {
-            "mainItem": "cargo",
-            "commands": ["build"]
-        },
-        "startCommand": {
-            "mainItem": "cargo",
-            "commands": ["run"]
-        }
-    }
-    </example>`
+    3. Best Practices:
+    - Write clean, well-commented code
+    - Include proper error handling
+    - Suggest modern language features
+    - Provide complete solutions (files + commands)`
 });
 
-// ... (keep your existing identityResponses and identityQuestions arrays)
-
+// ==================
+// MAIN FUNCTION
+// ==================
 export const generateResult = async (prompt) => {
     try {
-        // Handle identity questions (same as before)
+        // Validate input
+        if (typeof prompt !== 'string' || prompt.trim() === '') {
+            return { text: "Please provide a valid text prompt" };
+        }
+
+        // Check identity questions
+        const normalizedPrompt = prompt.toLowerCase();
         const isIdentityQuestion = identityQuestions.some(question => 
-            prompt.toLowerCase().includes(question)
+            normalizedPrompt.includes(question)
         );
 
         if (isIdentityQuestion) {
@@ -125,26 +96,21 @@ export const generateResult = async (prompt) => {
         try {
             const response = JSON.parse(responseText);
             
-            // Validate response structure
-            if (!response.fileTree) {
-                throw new Error("Invalid response format");
-            }
-
-            // Ensure language tags are added
-            for (const [filename, fileData] of Object.entries(response.fileTree)) {
-                if (!fileData.file.language) {
-                    const extension = filename.split('.').pop();
-                    fileData.file.language = extension;
+            // Validate and enhance response
+            if (response.fileTree) {
+                // Add language tags if missing
+                for (const [filename, fileData] of Object.entries(response.fileTree)) {
+                    if (!fileData.file.language) {
+                        const extension = filename.split('.').pop();
+                        fileData.file.language = extension;
+                    }
                 }
             }
 
             return response;
         } catch (e) {
-            console.warn("Failed to parse JSON response:", e);
-            return { 
-                text: responseText,
-                warning: "The AI response couldn't be structured properly" 
-            };
+            // Fallback to plain text if JSON parsing fails
+            return { text: responseText };
         }
     } catch (error) {
         console.error('AI generation error:', error);

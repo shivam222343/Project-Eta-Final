@@ -22,6 +22,8 @@ export const createProject = async (req, res) => {
     }
 };
 
+
+
 export const getAllProject = async (req, res) => {
     try {
         const loggedInUser = await userModel.findOne({

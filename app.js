@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import messageRouter from './routes/message.routes.js';
+import mermaidRoutes from './routes/mermaid.routes.js';
 
 dotenv.config();
 
@@ -70,6 +71,7 @@ app.use('/users', userRoutes);
 app.use('/projects', projectRoutes);
 app.use('/ai', aiRoutes);
 app.use('/api', messageRouter);
+app.use('/mermaid', mermaidRoutes);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
